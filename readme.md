@@ -8,11 +8,18 @@
 5. convert_ccpd_to_coco.sh文件，一步到位
 
 # 运行：
+```python
 python ccpd_to_coco.py --data data （生成json文件，包括bounding box、mask）
-python make_seg_mask.py (生成segmentation map)
-或者一步到位：
-** bash convert_ccpd_to_coco.sh data **
 
+python make_seg_mask.py (生成segmentation map)
+```
+
+或者一步到位：
+
+```bash
+
+** bash convert_ccpd_to_coco.sh data **
+```
 
 # 说明：
 把ccpd车牌检测数据集转化为coco格式；
