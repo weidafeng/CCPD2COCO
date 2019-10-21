@@ -22,3 +22,6 @@ python make_seg_mask.py (生成segmentation map)
 3. segmentation map （车牌的四个角点形成的平行四边形，比bounding box更精确）
 4. label（两类：是否为车牌）
 
+# 参考：
+[CCPD: Chinese City Parking Dataset](https://github.com/detectRecog/CCPD)
+
