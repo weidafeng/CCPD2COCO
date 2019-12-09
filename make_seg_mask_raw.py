@@ -33,13 +33,9 @@ widgets = ['Progress: ', w.Percentage(), ' ', w.Bar('#'), ' ', w.Timer(),
            ' ', w.ETA(), ' ', w.FileTransferSpeed()]
 progress = progressbar.ProgressBar(widgets=widgets)
 
-
-def write_image(im_file):
+myPool = pool.Pool(processes=16)  # 并行化处理
+for im_file in progress(im_files):
     img_cv = cv2.imread(str(im_file),0)
     cv2.imwrite(stuffmap_file_path + str(im_file.stem)+".png", img_cv)
-
-myPool = pool.Pool(processes=4)  # 并行化处理
-for im_file in progress(im_files):
-    myPool.apply_async(func=write_image,args=(im_file,))
 myPool.close()
 myPool.join()

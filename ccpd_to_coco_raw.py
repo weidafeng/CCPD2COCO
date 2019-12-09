@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-#
 #-------------------------------------------------------------------------------
-# Name:         ccpd_to_coco_raw.py
+# Name:         ccpd_to_coco.py
 # Author:       wdf
 # Date:         2019/10/18
 # IDE：         PyCharm
 # Description:  把ccod车牌检测数据集转化为coco格式（bbox、mask、stuffthingmaps）
 # Usage：
-#     python ccpd_to_coco_raw.py --data "./data"
+#     python ccpd_to_coco.py --data "./data"
 #-------------------------------------------------------------------------------
 
 import datetime
@@ -26,7 +26,6 @@ if not os.path.exists(file_path):
     os.mkdir(file_path)
 
 import argparse
-
 parser = argparse.ArgumentParser()
 ## 从命令行指定kjdz文件夹
 '''目录树如下
@@ -156,7 +155,6 @@ def main():
     im_files.sort(key=lambda f: f.stem,reverse=True)  # 排序，防止顺序错乱、数据和标签不对应
     # print("im-length:",len(im_files),"\n im_files：",im_files)
 
-    myPool = pool.Pool(processes=4)  # 并行化处理
 
     for im_file in im_files:
         # 写入图片信息（id、图片名、图片大小）,其中id从1开始
@@ -165,6 +163,7 @@ def main():
         coco_output['images'].append(im_info) # 存储图片信息（id、图片名、大小）
 
 
+        myPool = pool.Pool(processes=16)  # 并行化处理
         annotation_info_list = []  # 存储标注信息
 
         # 用于制作stuff-thing map
@@ -187,17 +186,15 @@ def main():
         # area = bounding_box[-1] * bounding_box[-2]  # 当前bounding-box的面积,宽×高
         area = compute_polygon_area(segmentation) # 当前segmentation的面积（比bounding box更精确）
 
-        myPool.apply_async(func=pycococreatortools.mask_create_annotation_info,
-                           args=(annotation_id, image_id, class_id, area,image.size, bounding_box,segmentation),
-                           callback=annotation_info_list.append)
-        # an_infos = pycococreatortools.mask_create_annotation_info(annotation_id=annotation_id, image_id=image_id,
-        #                                                           category_id=class_id, area=area,
-        #                                                           image_size=image.size, bounding_box=bounding_box,
-        #                                                           segmentation=segmentation)
-        # annotation_info_list.append(an_infos)
+        an_infos = pycococreatortools.mask_create_annotation_info(annotation_id=annotation_id, image_id=image_id,
+                                                                  category_id=class_id, area=area,
+                                                                  image_size=image.size, bounding_box=bounding_box,
+                                                                  segmentation=segmentation)
+        annotation_info_list.append(an_infos)
         cv2.imwrite(file_path+str(im_file.stem)+".png",rectangle)
 
-
+        myPool.close()
+        myPool.join()
 
         # 上面得到单张图片的所有bounding-box信息，接下来每单张图片存储一次
         for annotation_info in annotation_info_list:
@@ -205,9 +202,6 @@ def main():
                 coco_output['annotations'].append(annotation_info)
         image_id += 1
 
-
-    myPool.close()
-    myPool.join()
     # 保存成json格式
     print("[INFO] Storing annotations json file...")
     output_json = Path(f'ccpd_annotations.json')
